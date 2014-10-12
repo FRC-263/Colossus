@@ -1,0 +1,44 @@
+#ifndef MINIBOTDEPLOYER_H
+#define MINIBOTDEPLOYER_H
+
+#include "WPILib.h"
+#include "../AfterLib/AfterPID.h"
+#include "Arm.h"
+#include "../Defines.h"
+
+class MinibotDeployer {
+private:
+	typedef enum
+	{
+		RESET_COUNT,
+		TRACK_OUT,
+		DEPLOY,
+		RESET_COUNT_AGAIN,
+		TRACK_IN,
+		DONE
+	} deploymentState;
+		
+	deploymentState miniBotState;
+
+	Timer *clock;
+	
+	bool armed;
+	bool deployed;
+	
+	Arm *roboArm; 
+	void StartDeployment();
+	void RetractDeployment();
+	GearTooth *teethSensor;
+	Victor *deploymentMotor;
+	AfterPID *deployPID;
+	float volt_out; 
+	
+public:
+	MinibotDeployer(Arm *arm);
+	~MinibotDeployer(void);
+
+	void DeployMinibot();
+};
+
+#endif
+

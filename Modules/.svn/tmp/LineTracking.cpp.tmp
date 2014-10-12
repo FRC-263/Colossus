@@ -1,0 +1,217 @@
+#include "LineTracking.h"
+
+extern TrackingData *trackData;
+
+LineTracking::LineTracking(TankDrive *train, Arm *arm) {
+	backRight = new DigitalInput(PH_BR);
+	backMiddle = new DigitalInput(PH_BM);
+	backLeft = new DigitalInput(PH_BL);
+
+	frontRight = new DigitalInput(PH_FR);
+	frontMiddle = new DigitalInput(PH_FM);
+	frontLeft = new DigitalInput(PH_FL);
+
+	lineTrackControl = new AfterPID(1,0,0);
+	
+	tankDrive = train;
+	roboArm = arm;
+
+	leftWeight = -1;
+	middleWeight = 0;
+	rightWeight = 1;
+	nullVoltage = 0.25;
+
+	inputVal = 0;
+	motorBias = 0;
+	base_pos = 0;
+	found_base_pos = false;
+	
+	autoMachine = CLAW_CLOSE;
+}
+
+LineTracking::~LineTracking() {
+	delete backRight;
+	delete backMiddle;
+	delete backLeft;
+	delete frontRight;
+	delete frontMiddle;
+	delete frontLeft;
+}
+
+void LineTracking::SetTrackingData() {
+	trackData->FrontLeft = frontLeft->Get();
+	trackData->FrontMiddle = frontMiddle->Get();
+	trackData->FrontRight = frontRight->Get();
+	trackData->BackLeft = backLeft->Get();
+	trackData->BackMiddle = backMiddle->Get();
+	trackData->BackRight = backRight->Get();
+}
+
+<<<<<<< .mine
+void LineTracking::Reset()
+{
+	found_base_pos = false;
+	autoMachine = CLAW_CLOSE;
+}
+
+=======
+void LineTracking::Reset()
+{
+	printf("Autonomous Reset\n");
+	found_base_pos = false;
+	autoMachine = CLAW_CLOSE;
+}
+
+>>>>>>> .r83
+void LineTracking::DriveRobot() {
+<<<<<<< .mine
+				
+	switch(autoMachine)
+	{
+		case START_POS:
+			//if(roboArm->SetStartingPosition())
+				autoMachine = CLAW_CLOSE;
+			break;
+		case CLAW_CLOSE:
+			if(roboArm->SetClawClose())
+				autoMachine = RAISE_TOWER;
+			break;
+		case RAISE_TOWER:
+			if(roboArm->RaiseTower())
+				autoMachine = RAISE_ARM;
+			break;
+		case RAISE_ARM:
+			if(roboArm->SetScoringPosition())
+				Wait(.25);
+				autoMachine = MOVE_ROBOT;
+			break;
+		case MOVE_ROBOT:
+			if(!found_base_pos)
+			{
+				base_pos = tankDrive->GetPosition();
+				found_base_pos = true;
+			}
+			roboArm->SetScoringPosition();                                                                                 
+			Wait(.1);
+			if(tankDrive->AutoDrive(base_pos + 8.10, false,frontLeft->Get(), frontRight->Get()))
+			{
+				autoMachine = SCORE;
+				Wait(1);
+			}
+			break;
+		case SCORE:
+			found_base_pos = false;
+			if(roboArm->ScoreTube())
+				autoMachine = BACKUP;
+			break;
+		case BACKUP:
+			if(!found_base_pos)
+			{
+				base_pos = tankDrive->GetPosition();
+				found_base_pos = true;
+			}
+			Wait(.1);
+			if(tankDrive->AutoDrive(base_pos - 3.5, true, false, false))
+				autoMachine = END;
+			break;
+		case END:
+		default:
+			tankDrive->Drive(0,0);
+			tankDrive->UpdateSyncGroups();
+			break;
+	}
+=======
+	
+	switch(autoMachine)
+	{
+		case START_POS:
+			if(roboArm->SetStartingPosition())
+				autoMachine = CLAW_CLOSE;
+			break;
+		case CLAW_CLOSE:
+			if(roboArm->SetClawClose())
+				autoMachine = RAISE_TOWER;
+			break;
+		case RAISE_TOWER:
+			if(roboArm->RaiseTower())
+				autoMachine = RAISE_ARM;
+			break;
+		case RAISE_ARM:
+			if(roboArm->SetScoringPosition())
+				autoMachine = MOVE_ROBOT;
+			break;
+		case MOVE_ROBOT:
+			if(!found_base_pos)
+			{
+				base_pos = tankDrive->GetPosition();
+				found_base_pos = true;
+			}
+			roboArm->SetScoringPosition();
+			if(tankDrive->AutoDrive(base_pos + 8.15, false,frontLeft->Get(), frontRight->Get()))
+			{
+				autoMachine = SCORE;
+				Wait(1);
+			}
+			break;
+		case SCORE:
+			found_base_pos = false;
+			if(roboArm->ScoreTube())
+				autoMachine = BACKUP;
+			break;
+		case BACKUP:
+			if(!found_base_pos)
+			{
+				base_pos = tankDrive->GetPosition();
+				found_base_pos = true;
+			}
+			if(tankDrive->AutoDrive(base_pos - 3.5, true, false, false))
+				autoMachine = END;
+			break;
+		case END:
+		default:
+			tankDrive->Drive(0,0);
+			tankDrive->UpdateSyncGroups();
+			break;
+	}
+	
+	/*inputVal = ((frontRight->Get() * rightWeight) + 
+	 (frontLeft->Get() * leftWeight)) -
+	 ((backRight->Get() * rightWeight) +
+	 (backLeft->Get() * leftWeight));
+	 
+	 float frontSensorVal = frontMiddle->Get() + frontLeft->Get() + frontRight->Get();
+	 
+	 motorBias = lineTrackControl->GetOutput(inputVal, 0, 0, 1) * nullVoltage;
+	 printf("Motor BIas: %f\n", motorBias);
+	 if(frontSensorVal == 3)
+		 motorBias = 0;
+	 if(inputVal == 0)
+		 tankDrive->Drive(-.25, -.25);
+	 else
+		 tankDrive->Drive(motorBias, motorBias * -1);
+	
+	 tankDrive->UpdateSyncGroups();	*/
+
+	/*float fright = frontRight->Get();
+	 float fleft = frontLeft->Get();
+	 
+	 if (fright == 0 && fleft == 0)
+	 {
+	 tankDrive->Drive(.55 , -.55);
+	 }
+	 else if (fright == 1 && fleft == 0)
+	 {
+	 tankDrive->Drive(.55 , .55);
+	 }
+	 else if (fright == 0 && fleft == 1)
+	 {
+	 tankDrive->Drive(-.55 , -.55);
+	 }
+	 
+	 else if (fright == 1 && fleft == 1)
+	 {
+	 tankDrive->Drive(0 , 0);
+	 }*/
+	// Wait(0.5);
+>>>>>>> .r83
+}

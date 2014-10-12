@@ -1,0 +1,201 @@
+#include "MinibotDeployer.h"
+
+<<<<<<< .mine
+MinibotDeployer::MinibotDeployer(Arm *arm) {
+=======
+MinibotDeployer::MinibotDeployer(Arm *arm) {
+	teethSensor = new GearTooth(8);
+	
+	deploymentMotor = new Victor(4);
+	clock = new timer();
+>>>>>>> .r83
+	armed = false;
+	deployed = false;
+<<<<<<< .mine
+	
+	roboArm = arm;
+	
+	miniBotState = RESET_COUNT;
+	
+	teethSensor = new GearTooth(8);
+	deploymentMotor = new Victor(4);
+	deployPID = new AfterPID(.005, .0001, 0);
+	volt_out = 0; 
+=======
+	teethSensor->Start();
+	
+	roboArm = arm;
+	miniBotState =  Reset_Count;
+>>>>>>> .r83
+}
+
+MinibotDeployer::~MinibotDeployer() {
+	delete deploymentMotor;
+}
+
+<<<<<<< .mine
+void MinibotDeployer::StartDeployment() 
+{	
+	teethSensor->Start();
+	teethSensor->Reset();
+	printf("Sensor: %d\n", teethSensor->Get());
+	while(teethSensor->Get() < 75)
+	{
+		printf("Sensor: %d\n", teethSensor->Get());
+		volt_out = deployPID->GetOutput(teethSensor->Get(), 75, 0, 0);
+		deploymentMotor->Set(volt_out * -1);
+	}
+	deploymentMotor->Set(0);
+	teethSensor->Reset();
+=======
+bool MinibotDeployer::StartDeployment() {
+	// 131 to 137
+	/*while(teethSensor->Get() < 130)
+	{ 
+		deploymentMotor->Set(-.20);
+	}
+	deploymentMotor->Set(0);
+	teethSensor->Reset();
+	Wait(3);
+	while(teethSensor->Get() < 130)
+	{
+		deploymentMotor->Set(.20);
+	}
+	deploymentMotor->Set(0);*/
+	
+	
+	
+	switch(miniBotState)
+	{
+		case Reset_Count:
+				teethSensor->Reset();
+				miniBotState = Track_Out;
+				return false;
+				break;
+		case Track_Out:
+			if(teethSensor->Get() < 95)
+				{
+				volt_out = deployPID->GetOutput(teethSensor->Get(), 95, 0, 0);
+				printf("Volt_out: %f\n", volt_out);
+				deploymentMotor->Set(volt_out * -1);
+				}
+				else
+				{
+				deploymentMotor->Set(0);
+				miniBotState = Deploy;
+				clock->Start();
+				}
+				return false;
+				break;
+		case Track_Out:				
+				if(clock->HasPeriodPassed(2))
+				{
+				clock->Stop();
+				miniBotState = Reset_Count_Again;
+				}
+				return false;
+				break;
+		case Reset_Count_Again:
+				teethSensor->Reset();
+				miniBotState = Track_In;
+				return false;
+				break;
+		case Track_In:
+				if(teethSensor->Get() < 115)
+				{
+				volt_out = deployPID->GetOutput(teethSensor->Get(), 115, 0, 0);
+				deploymentMotor->Set(volt_out);
+				}
+				else
+				{
+				miniBotState = Done;
+				}
+				return false;
+				break;
+		case Done:
+				deploymentMotor->Set(0);
+				return true;
+				break;
+	}
+	
+	return false;
+	
+>>>>>>> .r83
+}
+
+<<<<<<< .mine
+void MinibotDeployer::RetractDeployment()
+{
+	    while(teethSensor->Get() < 75)
+		{
+			volt_out = deployPID->GetOutput(teethSensor->Get(), 75, 0, 0);
+			deploymentMotor->Set(volt_out);
+		}
+		teethSensor->Reset();
+		teethSensor->Stop();
+		deploymentMotor->Set(0);
+}
+
+=======
+
+>>>>>>> .r83
+void MinibotDeployer::DeployMinibot() {
+	DriverStation *ds = DriverStation::GetInstance();
+<<<<<<< .mine
+	 if(!ds->GetDigitalIn(5) && armed && deployed)
+=======
+	 if(!armed)
+>>>>>>> .r83
+	 {
+<<<<<<< .mine
+		 armed = false;
+		 deployed = false;
+		 
+		 RetractDeployment();
+		 while(!roboArm->SetStartingPosition())
+		 {}
+=======
+		 if(!ds->GetDigitalIn(3))
+			 armed = true;
+>>>>>>> .r83
+	 }
+	
+	 if(!armed)
+	 {
+		 if(!ds->GetDigitalIn(3))
+			 armed = true;
+	 }
+	 else
+	 {
+<<<<<<< .mine
+		 if(!deployed)
+		 {
+			 if(!ds->GetDigitalIn(5))
+			 {
+			 	deployed = true;
+			 	
+			 	StartDeployment();
+			 }
+		 }
+=======
+		 if(!deployed)
+		 {
+			 if(!ds->GetDigitalIn(5))
+			 {
+			 	deployed = true;
+			 	
+				while(!roboArm->SetStartingPosition() && !StartDeployment())
+				{
+				
+				printf("Arm Set: %s \n Mini-bot Deployed: %s\n",(roboArm->SetStartingPosition())?"True":"False"),(StartDeployment)?"True":"False");
+				
+				}
+				
+			 	armed = false;
+			 	deployed = false;
+			 		
+			 }
+		 }
+>>>>>>> .r83
+	 }
+}

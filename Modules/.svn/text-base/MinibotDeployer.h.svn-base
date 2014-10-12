@@ -1,0 +1,26 @@
+#ifndef MINIBOTDEPLOYER_H
+#define MINIBOTDEPLOYER_H
+
+#include "WPILib.h"
+#include "../AfterLib/AfterPID.h"
+#include "Arm.h"
+#include "../Defines.h"
+
+class MinibotDeployer {
+private:	
+	bool armed;
+	bool deployed;
+	
+	Arm *roboArm; 
+	Victor *deploymentMotor;
+	
+	DigitalInput *limitSwitch;
+public:
+	MinibotDeployer(Arm *arm);
+	~MinibotDeployer(void);
+
+	void DeployMinibot();
+};
+
+#endif
+

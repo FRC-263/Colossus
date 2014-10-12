@@ -1,0 +1,60 @@
+#ifndef LINETRACKING_H
+#define LINETRACKING_H
+
+#include "WPILib.h"
+#include "TankDrive.h"
+#include "../Defines.h"
+#include "../AfterLib/AfterPID.h"
+#include "../Data/TrackingData.h"
+#include "Arm.h"
+
+class LineTracking {
+private:	
+	typedef enum
+	{
+		START_POS,
+		CLAW_CLOSE,
+		RAISE_TOWER,
+		RAISE_ARM,
+		MOVE_ROBOT,
+		SCORE,
+		BACKUP,
+		END,
+	} autoState;
+	
+	DigitalInput *backLeft;
+	DigitalInput *backMiddle;
+	DigitalInput *backRight;
+
+	DigitalInput *frontLeft;
+	DigitalInput *frontMiddle;
+	DigitalInput *frontRight;
+
+	float leftWeight;
+	float middleWeight;
+	float rightWeight;
+	float nullVoltage;
+
+	AfterPID *lineTrackControl;
+	
+	TankDrive *tankDrive;
+	Arm *roboArm;
+
+	float inputVal;
+	float motorBias;
+	
+	float base_pos;
+	bool found_base_pos;
+	
+	autoState autoMachine;
+
+public:
+	LineTracking(TankDrive *train, Arm *arm);
+	~LineTracking(void);
+
+	void DriveRobot();
+	void Reset();
+	void SetTrackingData();
+};
+
+#endif

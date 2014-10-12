@@ -1,0 +1,147 @@
+#include "TankDrive.h"
+
+extern JagData* jagData;
+
+TankDrive::TankDrive(void) {
+	leftBlackMotor = new CANJaguar(LEFTBLACKMOTOR, CANJaguar::kPercentVbus);
+	leftGreyMotor = new CANJaguar(LEFTGREYMOTOR, CANJaguar::kPercentVbus);
+	rightBlackMotor = new CANJaguar(RIGHTBLACKMOTOR, CANJaguar::kPercentVbus);
+	rightGreyMotor = new CANJaguar(RIGHTGREYMOTOR, CANJaguar::kPercentVbus);
+
+	leftGreyPID = new AfterPID(.002, .0001, .001);
+	rightGreyPID = new AfterPID(.002, .0001, .001);
+
+	leftStick = new Joystick(LEFTSTICK);
+	rightStick = new Joystick(RIGHTSTICK);
+
+	kPercentVbusLeft = 0;
+	kPercentVbusRight = 0;
+}
+
+TankDrive::~TankDrive(void) {
+	delete leftBlackMotor;
+	delete leftGreyMotor;
+	delete rightBlackMotor;
+	delete rightGreyMotor;
+
+	delete leftStick;
+	delete rightStick;
+}
+
+void TankDrive::SetupDriveTrain() {
+	SetupJaguar(leftBlackMotor);
+	SetupJaguar(rightBlackMotor);
+	SetupJaguar(leftGreyMotor);
+	SetupJaguar(rightGreyMotor);
+
+	leftBlackMotor->SetSafetyEnabled(false);
+	rightBlackMotor->SetSafetyEnabled(false);
+	rightGreyMotor->SetSafetyEnabled(false);
+	rightGreyMotor->SetSafetyEnabled(false);
+}
+
+void TankDrive::SetupJaguar(CANJaguar *jag, UINT16 codesPerRev) {
+	jag->ConfigEncoderCodesPerRev(codesPerRev);
+	jag->ConfigNeutralMode(CANJaguar::kNeutralMode_Jumper);
+	jag->SetSpeedReference(CANJaguar::kSpeedRef_QuadEncoder);
+	jag->SetPID(CAN_PID_P, CAN_PID_I, CAN_PID_D);
+	jag->EnableControl();
+}
+
+void TankDrive::SetJagData() {
+	jagData->leftBlackBusVoltage = leftBlackMotor->GetBusVoltage();
+	jagData->leftBlackCurrent = leftBlackMotor->GetOutputCurrent();
+	jagData->leftBlackOutVoltage = leftBlackMotor->GetOutputVoltage();
+	jagData->leftBlackTemp = leftBlackMotor->GetTemperature();
+
+	jagData->leftGreyBusVoltage = leftGreyMotor->GetBusVoltage();
+	jagData->leftGreyCurrent = leftGreyMotor->GetOutputCurrent();
+	jagData->leftGreyOutVoltage = leftGreyMotor->GetOutputVoltage();
+	jagData->leftGreyTemp = leftGreyMotor->GetTemperature();
+
+	jagData->rightBlackBusVoltage = rightBlackMotor->GetBusVoltage();
+	jagData->rightBlackCurrent = rightBlackMotor->GetOutputCurrent();
+	jagData->rightBlackOutVoltage = rightBlackMotor->GetOutputVoltage();
+	jagData->rightBlackTemp = rightBlackMotor->GetTemperature();
+
+	jagData->rightGreyBusVoltage = rightGreyMotor->GetBusVoltage();
+	jagData->rightGreyCurrent = rightGreyMotor->GetOutputCurrent();
+	jagData->rightGreyOutVoltage = rightGreyMotor->GetOutputVoltage();
+	jagData->rightGreyTemp = rightGreyMotor->GetTemperature();
+
+	jagData->leftSpeed = leftBlackMotor->GetSpeed();
+	jagData->rightSpeed = rightBlackMotor->GetSpeed();
+}
+
+void TankDrive::Drive() {
+	Drive(leftStick->GetY() * -1, leftStick->GetTwist() * -1);
+}
+
+void TankDrive::UpdateSyncGroups() {
+	leftBlackMotor->UpdateSyncGroup(1);
+	leftGreyMotor->UpdateSyncGroup(1);
+	rightBlackMotor->UpdateSyncGroup(1);
+	rightGreyMotor->UpdateSyncGroup(1);
+}
+
+void TankDrive::Drive(float leftY, float rightY) {
+
+	/*
+	 * 		Left Motor Calculations
+	 */
+<<<<<<< .mine
+
+	driveThrottle = 1; 
+	kPercentVbusLeftDelta = (leftGreyPID->GetOutput(leftBlackMotor->GetSpeed(),
+			(leftY * MAX_RPM * driveThrottle * -1), 0, 5) ) / 1;
+=======
+	 
+	 //Throttle dosnt exist on game pad, keeping to easily switch to joysticks and as softlimit.
+	driveThrottle = 1;  //(rightStick->GetThrottle() - 1) / -2;
+	
+	//Left Motor is Reversed. RPM will be negative for Foward and vBus will be negatie for foward.
+	//Leaving left RPM as Negative, and swtiching Left Target to match the required inversion
+	//Should fix newest driving issue, Delta was being inverted which would cause motor to switch direction if Delta was large enough after an increase in speed
+	
+	kPercentVbusLeftDelta = (leftGreyPID->GetOutput(leftBlackMotor->GetSpeed(),
+			(leftY * MAX_RPM * driveThrottle  * -1), 0, 5) ) / 1;
+>>>>>>> .r70
+	kPercentVbusLeft += kPercentVbusLeftDelta;
+
+	if (kPercentVbusLeft > 1)
+		kPercentVbusLeft = 1;
+	else if (kPercentVbusLeft < -1)
+		kPercentVbusLeft = -1;
+
+	if (fabs(leftStick->GetY()) < JOYSTICK_ERROR_OFFSET)
+		kPercentVbusLeft = 0;
+
+	kPercentVbusRightDelta = (rightGreyPID->GetOutput(
+			rightBlackMotor->GetSpeed(), (rightY * MAX_RPM * driveThrottle), 0,
+			5)) / 1;
+	kPercentVbusRight+= kPercentVbusRightDelta;
+
+	if (kPercentVbusRight > 1)
+		kPercentVbusRight = 1;
+	else if (kPercentVbusRight < -1)
+		kPercentVbusRight = -1;
+
+	if (fabs(rightStick->GetY()) < JOYSTICK_ERROR_OFFSET)
+		kPercentVbusRight = 0;
+
+	if (fabs(leftY) > JOYSTICK_ERROR_OFFSET) {
+		leftBlackMotor->Set(kPercentVbusLeft, 1);
+		leftGreyMotor->Set(kPercentVbusLeft, 1);
+	} else {
+		leftBlackMotor->Set(0, 1);
+		leftGreyMotor->Set(0, 1);
+	}
+
+	if (fabs(rightY) > JOYSTICK_ERROR_OFFSET) {
+		rightBlackMotor->Set(kPercentVbusRight, 1);
+		rightGreyMotor->Set(kPercentVbusRight, 1);
+	} else {
+		rightBlackMotor->Set(0, 1);
+		rightGreyMotor->Set(0, 1);
+	}
+}

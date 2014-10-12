@@ -1,0 +1,53 @@
+#include "MinibotDeployer.h"
+
+MinibotDeployer::MinibotDeployer(Arm *arm) {
+	armed = false;
+	deployed = false;
+	
+	roboArm = arm;	
+	deploymentMotor = new Victor(4);
+	
+	limitSwitch = new DigitalInput(9);
+}
+
+MinibotDeployer::~MinibotDeployer() {
+	delete deploymentMotor;
+}
+
+void MinibotDeployer::DeployMinibot() {
+	 DriverStation *ds = DriverStation::GetInstance();
+	 
+	 if(ds->GetDigitalIn(3) && !ds->GetDigitalIn(5) && !ds->IsFMSAttached())
+	 {
+		 while(!roboArm->SetStartingPosition()) {}
+		 return;
+	 }
+	 
+	 if(!armed)
+	 {
+		 if(!ds->GetDigitalIn(3))
+			 armed = true;
+	 }
+	 else
+	 {
+		 if(!deployed)
+		 {
+			 if(!ds->GetDigitalIn(5))
+			 {
+			 	deployed = true;
+			 }
+		 }
+		 else 
+		 {
+			 if(limitSwitch->Get() != 0)
+		 	 {
+		 		 deploymentMotor->Set(-.55);
+		 	 }
+			 else
+			 {
+				 deploymentMotor->Set(0);
+				 deployed = false;
+			 }
+		 }
+	 }
+}
